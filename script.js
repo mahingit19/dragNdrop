@@ -1,3 +1,5 @@
+let filesArray = [];
+
 //shorten the objects
 const dropArea = document.getElementById('drop-area');
 const fileInput = document.getElementById('file-input');
@@ -83,6 +85,8 @@ function isValidFileType(file) {
     return allowedTypes.includes(file.type);
 }
 
+
+//allowing input from clipboard paste
 document.getElementById('drop-area').addEventListener('paste', function(event) {
     const clipboardItems = event.clipboardData.items;
     for (const item of clipboardItems) {
@@ -94,5 +98,14 @@ document.getElementById('drop-area').addEventListener('paste', function(event) {
 });
 
 document.getElementById('drop-area').addEventListener('input', function(event) {
-    event.preventDefault();
+    if (event.inputType === 'insertText' || event.inputType === 'insertParagraph') {
+        event.preventDefault();
+    }
+});
+
+document.getElementById('drop-area').addEventListener('click', function () {
+    document.getElementById('file-input').click(function (item) {
+        const file = item.getAsFile();
+        handleFiles([file]);
+    });
 });
