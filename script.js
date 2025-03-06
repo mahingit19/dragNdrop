@@ -1,111 +1,110 @@
-let filesArray = [];
+const uploadButton = document.getElementById('uploadButton');
+const fileInput = document.getElementById('fileInput');
+const messageInput = document.getElementById('messageInput');
+const preview = document.getElementById('preview');
+const fileArray = [];
 
-//shorten the objects
-const dropArea = document.getElementById('drop-area');
-const fileInput = document.getElementById('file-input');
-
-//prevent browser default behaviors
-function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-}
-
-//prevent defaults for dragging over a area
-dropArea.addEventListener('dragover', preventDefaults);
-dropArea.addEventListener('dragenter', preventDefaults);
-dropArea.addEventListener('dragleave', preventDefaults);
-
-//enhance UI when dropping
-dropArea.addEventListener('dragover', () => {
-    dropArea.classList.add('drag-over');
+uploadButton.addEventListener('click', function () {
+    fileInput.click();
 });
 
-dropArea.addEventListener('dragleave', () => {
-    dropArea.classList.remove('drag-over');
+fileInput.addEventListener('change', handleFiles);
+
+messageInput.addEventListener('paste', handlePaste);
+
+document.addEventListener('dragover', function (event) {
+    event.preventDefault();
+    document.querySelector('.chat-container').classList.add('drag-over');
 });
 
-//file dropping handling
-dropArea.addEventListener('drop', handleDrop);
+document.addEventListener('dragleave', function () {
+    document.querySelector('.chat-container').classList.remove('drag-over');
+});
 
-function handleDrop(e) {
-    e.preventDefault();
+document.addEventListener('drop', function (event) {
+    event.preventDefault();
+    document.querySelector('.chat-container').classList.remove('drag-over');
+    handleFiles(event);
+});
 
-    //getting list of dragging files
-    const files = e.dataTransfer.files;
+function handleFiles(event) {
+    const files = event.type === 'drop' ? event.dataTransfer.files : event.target.files;
 
-    //check for files
-    if (files.length) {
-        //assinging files to hidden input
-        fileInput.files = files;
-
-        //process the files for preview
-        handleFiles(files);
-    }
-}
-
-function handleFiles(files) {
-    for (const file of files) {
-        //initializing fileReader API and reading the file
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
         const reader = new FileReader();
+
+        reader.onload = function (e) {
+            const previewItem = document.createElement('div');
+            previewItem.classList.add('preview-item');
+
+            const img = document.createElement('img');
+            img.src = e.target.result;
+
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.classList.add('remove-button');
+            removeButton.addEventListener('click', function () {
+                preview.removeChild(previewItem);
+                fileArray.splice(fileArray.indexOf(file), 1);
+                updateFileInput();
+            });
+
+            previewItem.appendChild(img);
+            previewItem.appendChild(removeButton);
+            preview.appendChild(previewItem);
+
+            fileArray.push(file);
+            updateFileInput();
+        };
+
         reader.readAsDataURL(file);
+    }
+}
 
-        //if file loaded , fire the process
-        reader.onloadend = function (e) {
+function handlePaste(event) {
+    const items = (event.clipboardData || event.originalEvent.clipboardData).items;
 
-            const fileDiv = document.createElement('div');
-            fileDiv.className = 'file';
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].kind === 'file') {
+            const file = items[i].getAsFile();
+            const reader = new FileReader();
 
-            const preview = document.createElement('img');
+            reader.onload = function (e) {
+                const previewItem = document.createElement('div');
+                previewItem.classList.add('preview-item');
 
-            if (isValidFileType(file)) {
-                preview.src = e.target.result;
-            }
+                const img = document.createElement('img');
+                img.src = e.target.result;
 
-            //apply the styles
-            preview.classList.add('preview-image');
-            const previewContainer = document.getElementById('preview-container');
-            fileDiv.appendChild(preview);
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'Remove';
+                removeButton.classList.add('remove-button');
+                removeButton.addEventListener('click', function () {
+                    preview.removeChild(previewItem);
+                    fileArray.splice(fileArray.indexOf(file), 1);
+                    updateFileInput();
+                });
 
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'remove-btn';
-            removeBtn.textContent = 'X';
-            removeBtn.onclick = function() {
-                previewContainer.removeChild(fileDiv);
+                previewItem.appendChild(img);
+                previewItem.appendChild(removeButton);
+                preview.appendChild(previewItem);
+
+                fileArray.push(file);
+                updateFileInput();
             };
-            fileDiv.appendChild(removeBtn);
 
-            previewContainer.appendChild(fileDiv);
+            reader.readAsDataURL(file);
         }
     }
 }
 
-//allowing files type
-function isValidFileType(file) {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    return allowedTypes.includes(file.type);
-}
-
-
-//allowing input from clipboard paste
-document.getElementById('drop-area').addEventListener('paste', function(event) {
-    const clipboardItems = event.clipboardData.items;
-    for (const item of clipboardItems) {
-        if (item.type.startsWith('image/')) {
-            const file = item.getAsFile();
-            handleFiles([file]);
-        }
-    }
-});
-
-document.getElementById('drop-area').addEventListener('input', function(event) {
-    if (event.inputType === 'insertText' || event.inputType === 'insertParagraph') {
-        event.preventDefault();
-    }
-});
-
-document.getElementById('drop-area').addEventListener('click', function () {
-    document.getElementById('file-input').click(function (item) {
-        const file = item.getAsFile();
-        handleFiles([file]);
+function updateFileInput() {
+    const dataTransfer = new DataTransfer();
+    
+    fileArray.forEach(file => {
+        dataTransfer.items.add(file);
     });
-});
+    
+    fileInput.files = dataTransfer.files;
+}
