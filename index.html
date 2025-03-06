@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag and Drop</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Drag and Drop</h1>
+
+    <div id="drop-area" contenteditable="true" onclick="document.getElementById('file-input').click()">
+        Drag and drop here
+    </div>
+    <input type="file" id="file-input" multiple hidden>
+    <div id="preview-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
